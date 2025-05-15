@@ -1,9 +1,9 @@
 
-# RecipeConvert
+# RecipeConversion
 
 ## Overview
 
-RecipeConvert is an app designed to convert manually created dispensing recipes into a format compatible with FluidMove. Users input configuration files with coordinates for dispensing, and the app automatically converts them into the required format for seamless execution by FluidMove.
+RecipeConversion is an app designed to convert manually created dispensing recipes into a format compatible with FluidMove. Users input configuration files with coordinates for dispensing, and the app automatically converts them into the required format for seamless execution by FluidMove.
 
 ## Features
 
@@ -15,11 +15,11 @@ RecipeConvert is an app designed to convert manually created dispensing recipes 
 
 	1.Clone this repository to your local machine: 
 
-		git clone https://github.com/your-repository/RecipeConvert.git
+		git clone https://github.com/your-repository/RecipeConversion.git
 
 	2.Navigate to the project directory: 
 
-		cd RecipeConvert
+		cd RecipeConversion
  
 	3.Install dependencies: 
 
