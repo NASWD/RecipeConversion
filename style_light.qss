@@ -1,0 +1,89 @@
+
+/* GENERAL APP BACKGROUND */
+QWidget {
+    background-color: #f5f5f5;
+    color: #222;
+    font-size: 13px;
+    font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+/* SIDEBAR */
+QListWidget {
+    background-color: #eaeaea;
+    border: none;
+    color: #222;
+    font-weight: bold;
+    padding-top: 10px;
+}
+
+QListWidget::item {
+    height: 40px;
+    padding-left: 16px;
+    border: none;
+}
+
+QListWidget::item:selected {
+    background-color: rgb(0, 122, 201);
+    color: white;
+    border-left: 4px solid #ffffff;
+}
+
+/* HEADER / SECTION LABEL */
+QLabel#title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+}
+
+/* BUTTONS */
+QPushButton {
+    background-color: #ffffff;
+    color: #222;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    padding: 5px 12px;
+    font-size: 11px;
+}
+
+QPushButton:hover {
+    background-color: rgb(0, 122, 201);
+    color: white;
+}
+
+QPushButton:disabled {
+    background-color: #ddd;
+    color: #aaa;
+}
+
+/* INPUT FIELDS */
+QLineEdit {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    color: #222;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+QCheckBox {
+    padding-left: 6px;
+    color: #333;
+}
+
+/* TABLE */
+QTableWidget {
+    background-color: #ffffff;
+    color: #222;
+    gridline-color: #ccc;
+    font-size: 12px;
+}
+
+QHeaderView::section {
+    background-color: #dddddd;
+    color: #111;
+    font-weight: bold;
+    padding: 6px;
+    border: none;
+}

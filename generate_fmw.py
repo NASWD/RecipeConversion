@@ -1,57 +1,54 @@
+
+import os
 import pandas as pd
-from datetime import datetime
 
-ENCODER_COUNTS_PER_MM = 1000
-FMW_PER_ENCODER_COUNT = 0.393701
-CONVERSION_FACTOR = ENCODER_COUNTS_PER_MM * FMW_PER_ENCODER_COUNT
+def mm_to_fmu(mm):
+    return round(mm * (25.4 / 0.9375), 6)
 
-def convert_coordinates(df):
-    coord_columns = ['Start X', 'Start Y', 'End X', 'End Y']
-    for col in coord_columns:
-        if col in df.columns:
-            df[f'{col} (FMW)'] = df[col] * CONVERSION_FACTOR
-    return df
+def generate_fmw_from_template(excel_path, template_path, output_dir,
+                                ref_frame=(0, 0, 0), include_height_sense=False):
 
-def generate_line_entries(df):
-    lines = []
-    for _, row in df.iterrows():
-        try:
-            sx = float(row.get('Start X (FMW)', 0))
-            sy = float(row.get('Start Y (FMW)', 0))
-            ex = float(row.get('End X (FMW)', 0))
-            ey = float(row.get('End Y (FMW)', 0))
-            weight = row.get('Weight', '')
-            await_time = row.get('Await Time', '')
-            lines.append(f"LINE {sx:.3f},{sy:.3f} -> {ex:.3f},{ey:.3f} | {weight}mg | {await_time}s")
-        except:
-            continue
-    return lines
+    with open(template_path, "r") as f:
+        content = f.read()
 
-def generate_fmw_from_template(excel_path, template_path, output_dir):
+    header = content.split(".main:")[0].strip()
+    footer = ".end"
+
+    # Parse Excel
     df = pd.read_excel(excel_path)
-    df = convert_coordinates(df)
-    line_entries = generate_line_entries(df)
+    col_map = {
+        "Start Point X (mm)": "StartX",
+        "Start Point Y (mm)": "StartY",
+        "End Point X (mm)": "EndX",
+        "End Point Y (mm)": "EndY",
+        "Target Weight": "Weight",
+        "Await Timer": "Await",
+        "Pass": "Pass"
+    }
+    df = df.rename(columns=col_map)
+    df = df.dropna(subset=["StartX", "StartY", "EndX", "EndY"])
+    if "Pass" not in df.columns:
+        df["Pass"] = 1  # Default all to pass 1 if not specified
 
-    with open(template_path, "r", encoding="utf-8", errors="ignore") as f:
-        original_lines = f.readlines()
+    # Build .main block
+    main_lines = []
+    for pass_num, group in df.groupby("Pass"):
+        main_lines.append("COMMENT: *****************************************************")
+        main_lines.append(f"COMMENT: Pattern {int(pass_num)}")
+        for idx, row in group.iterrows():
+            x1 = mm_to_fmu(row["StartX"])
+            y1 = mm_to_fmu(row["StartY"])
+            x2 = mm_to_fmu(row["EndX"])
+            y2 = mm_to_fmu(row["EndY"])
+            main_lines.append(f"LINE: {idx+1}, Start:({x1}, {y1}), End:({x2}, {y2})")
 
-    new_lines = []
-    inside_target = False
-    for line in original_lines:
-        stripped = line.strip()
-        if stripped.startswith(".patt: Everglades Dots"):
-            inside_target = True
-            new_lines.append(line)
-        elif inside_target and stripped.startswith(".ref frame:"):
-            new_lines.append(line)
-            new_lines.extend([entry + "\n" for entry in line_entries])
-            inside_target = False
-        else:
-            new_lines.append(line)
+    main_block = "\n".join(main_lines)
 
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
-    output_path = f"{output_dir}/AutoTest_Generated_{timestamp}.fmw"
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.writelines(new_lines)
+    # Final output
+    final_output = f"{header}\n\n.main:\n{main_block}\n\n{footer}"
 
-    return output_path
+    filename = os.path.join(output_dir, "generated_program.fmw")
+    with open(filename, "w") as f:
+        f.write(final_output)
+
+    return filename

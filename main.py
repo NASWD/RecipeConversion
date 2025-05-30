@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QStackedWidget, QListWidget, QListWidgetItem,
-    QWidget, QHBoxLayout
+    QWidget, QHBoxLayout, QPushButton, QVBoxLayout
 )
 from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtCore import Qt
@@ -32,14 +32,44 @@ class MainWindow(QMainWindow):
 
         self.sidebar.currentRowChanged.connect(self.stack.setCurrentIndex)
 
-        # Layout
+        #Light theme
+
+        self.theme_toggle = QPushButton("🌙")
+        self.theme_toggle.setFixedWidth(30)
+        self.theme_toggle.setToolTip("Toggle Light/Dark Mode")
+        self.theme_toggle.clicked.connect(self.toggle_theme)
+
+        # Add to header layout or toolbar
+
+        from PyQt5.QtWidgets import QVBoxLayout  # add this to your imports
+
+        # Sidebar layout with toggle at bottom
+        sidebar_layout = QVBoxLayout()
+        sidebar_layout.addWidget(self.sidebar)
+        sidebar_layout.addStretch()
+        sidebar_layout.addWidget(self.theme_toggle)
+
+        sidebar_container = QWidget()
+        sidebar_container.setLayout(sidebar_layout)
+
+        # Main layout
         layout = QHBoxLayout()
-        layout.addWidget(self.sidebar)
+        layout.addWidget(sidebar_container)
         layout.addWidget(self.stack)
 
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
+
+    def toggle_theme(self):
+        if self.theme_toggle.text() == "🌙":
+            with open("style_light.qss", "r") as f:
+                QApplication.instance().setStyleSheet(f.read())
+            self.theme_toggle.setText("☀️")
+        else:
+            with open("style.qss", "r") as f:
+                QApplication.instance().setStyleSheet(f.read())
+            self.theme_toggle.setText("🌙")
 
     def init_dark_mode(self):
         palette = QPalette()
@@ -56,8 +86,15 @@ class MainWindow(QMainWindow):
         palette.setColor(QPalette.HighlightedText, Qt.black)
         QApplication.setPalette(palette)
 
+
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
+    with open("style.qss", "r") as f:
+        app.setStyleSheet(f.read())
+
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())

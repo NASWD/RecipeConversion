@@ -17,7 +17,6 @@ class WaferMapTab(QWidget):
         left_panel = QVBoxLayout()
         right_panel = QVBoxLayout()
 
-        # Form inputs
         self.inputs = {}
         form = QFormLayout()
         for label in ["Wafer Diameter (mm)", "Grid X Size", "Grid Y Size",
@@ -31,7 +30,6 @@ class WaferMapTab(QWidget):
             self.inputs[label] = box
         left_panel.addLayout(form)
 
-        # File loader
         self.map_file_label = QLabel("No wafer map loaded.")
         self.map_file_label.setStyleSheet("color: white;")
         browse_btn = QPushButton("Browse Wafer Map File")
@@ -39,13 +37,15 @@ class WaferMapTab(QWidget):
         left_panel.addWidget(self.map_file_label)
         left_panel.addWidget(browse_btn)
 
-        # Table for map entries
         self.table = QTableWidget()
         self.table.setColumnCount(7)
         self.table.setHorizontalHeaderLabels(["Part ID", "X ID", "Y ID", "Left", "Top", "Right", "Bottom"])
         left_panel.addWidget(self.table)
 
-        # Wafer drawing canvas
+        submit_btn = QPushButton("Submit Wafer Map to Export")
+        submit_btn.clicked.connect(self.submit_wafer_map_data)
+        left_panel.addWidget(submit_btn)
+
         self.scene = QGraphicsScene()
         self.view = QGraphicsView(self.scene)
         self.view.setRenderHint(QPainter.Antialiasing)
@@ -55,6 +55,27 @@ class WaferMapTab(QWidget):
         layout.addLayout(left_panel, 3)
         layout.addLayout(right_panel, 2)
         self.setLayout(layout)
+
+    def submit_wafer_map_data(self):
+        from wafermap_data import submit_wafer_map
+        dies = []
+        for row in range(self.table.rowCount()):
+            try:
+                die_id = int(self.table.item(row, 0).text())
+                x_idx = int(self.table.item(row, 1).text())
+                y_idx = int(self.table.item(row, 2).text())
+                die_type = "A"
+                dies.append({"id": die_id, "x_idx": x_idx, "y_idx": y_idx, "type": die_type})
+            except:
+                continue
+
+        origin = (0.0, 0.0)
+        step = (
+            self.inputs["Grid X Pitch (mm)"].value(),
+            self.inputs["Grid Y Pitch (mm)"].value()
+        )
+        submit_wafer_map(dies, origin, step, die_type="A")
+        self.map_file_label.setText("✅ Wafer map submitted to export.")
 
     def load_map_file(self):
         path, _ = QFileDialog.getOpenFileName(self, "Open Wafer Map", "", "Text Files (*.txt);;All Files (*)")
@@ -80,7 +101,6 @@ class WaferMapTab(QWidget):
 
     def draw_wafer_preview(self):
         self.scene.clear()
-        # Get values
         diameter = self.inputs["Wafer Diameter (mm)"].value()
         pitch_x = self.inputs["Grid X Pitch (mm)"].value()
         pitch_y = self.inputs["Grid Y Pitch (mm)"].value()
@@ -89,13 +109,11 @@ class WaferMapTab(QWidget):
         pkg_w = self.inputs["Package Width (mm)"].value()
         pkg_h = self.inputs["Package Height (mm)"].value()
 
-        # Draw wafer circle
         wafer_radius = diameter / 2
         wafer_circle = QGraphicsEllipseItem(QRectF(-wafer_radius, -wafer_radius, diameter, diameter))
         wafer_circle.setPen(QPen(QColor("lime"), 1))
         self.scene.addItem(wafer_circle)
 
-        # Draw dies
         origin_x = - (grid_x / 2) * pitch_x
         origin_y = - (grid_y / 2) * pitch_y
 
